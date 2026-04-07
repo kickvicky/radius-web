@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface PostImageProps {
   src: string;
@@ -15,11 +15,21 @@ export function PostImage({ src, alt }: PostImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  if (hasError) {
-    return null;
-  }
-
   const optimizedSrc = getCloudinaryOptimizedUrl(src, 800);
+
+  const imgRef = useCallback((img: HTMLImageElement | null) => {
+    if (img && img.complete && img.naturalHeight > 0) {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="w-full aspect-[16/10] rounded-[10px] bg-surface-container-high flex items-center justify-center">
+        <span className="text-xs text-on-surface-variant">Failed to load image</span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full aspect-[16/10] rounded-[10px] overflow-hidden bg-surface-container-high">
@@ -28,6 +38,7 @@ export function PostImage({ src, alt }: PostImageProps) {
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={imgRef}
         src={optimizedSrc}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-300 ${
