@@ -1,24 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, Radar, PlusCircle, Users, User, LucideIcon } from "lucide-react";
 
 interface NavItem {
   id: string;
   icon: LucideIcon;
   label: string;
+  href: string;
 }
 
 const navItems: NavItem[] = [
-  { id: "home", icon: Home, label: "Home" },
-  { id: "pulse", icon: Radar, label: "Pulse" },
-  { id: "create", icon: PlusCircle, label: "Post" },
-  { id: "nearby", icon: Users, label: "Nearby" },
-  { id: "profile", icon: User, label: "Profile" },
+  { id: "home", icon: Home, label: "Home", href: "/" },
+  { id: "pulse", icon: Radar, label: "Pulse", href: "/pulse" },
+  { id: "create", icon: PlusCircle, label: "Post", href: "/create" },
+  { id: "nearby", icon: Users, label: "Nearby", href: "/nearby" },
+  { id: "profile", icon: User, label: "Profile", href: "/profile" },
 ];
 
 export function BottomNavigation() {
-  const [activeTab, setActiveTab] = useState("pulse");
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const getActiveTab = () => {
+    if (pathname === "/") return "home";
+    const match = navItems.find((item) => item.href !== "/" && pathname.startsWith(item.href));
+    return match?.id || "home";
+  };
+
+  const activeTab = getActiveTab();
+
+  const handleNavigation = (item: NavItem) => {
+    router.push(item.href);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20">
@@ -32,7 +46,7 @@ export function BottomNavigation() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleNavigation(item)}
                 className="flex flex-col items-center gap-1 px-4 py-1"
               >
                 <div className="w-12 h-12 rounded-[12px] bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
@@ -45,7 +59,7 @@ export function BottomNavigation() {
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleNavigation(item)}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-[12px] transition-colors ${
                 isActive
                   ? "text-primary"
