@@ -72,8 +72,12 @@ export function FeedCard({ post }: FeedCardProps) {
             </div>
             <div className="flex items-center gap-2 text-xs text-on-surface-variant">
               <span>{post.timeAgo}</span>
-              <span className="w-1 h-1 bg-outline-variant rounded-full" />
-              <span>{post.distance}</span>
+              {post.distance && (
+                <>
+                  <span className="w-1 h-1 bg-outline-variant rounded-full" />
+                  <span>{post.distance}</span>
+                </>
+              )}
             </div>
           </div>
         </div>

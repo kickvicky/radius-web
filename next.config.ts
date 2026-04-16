@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        // TODO: move to env var (NEXT_PUBLIC_API_BASE_URL) for staging/prod
+        destination: "http://localhost:8080/api/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
