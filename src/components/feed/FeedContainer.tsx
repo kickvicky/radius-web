@@ -4,7 +4,7 @@ import { useFeedPosts } from "@/hooks/useFeedPosts";
 import { FeedList } from "./FeedList";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
-function FeedSkeleton() {
+export function FeedSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
