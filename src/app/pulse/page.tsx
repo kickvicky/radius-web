@@ -1,5 +1,5 @@
 import { Header, LocationBanner, BottomNavigation } from "@/components/layout";
-import { FeedContainer, FeedHeader } from "@/components/feed";
+import { FeedHeader, FeedContainerDynamic } from "@/components/feed";
 
 export default function PulseFeed() {
   return (
@@ -9,7 +9,7 @@ export default function PulseFeed() {
 
       <main className="px-4 py-4 pb-28 space-y-3">
         <FeedHeader title="The Pulse" />
-        <FeedContainer />
+        <FeedContainerDynamic />
       </main>
 
       <BottomNavigation />

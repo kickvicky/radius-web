@@ -34,8 +34,18 @@ function adaptApiPost(post: ApiPost): FeedPost {
 }
 
 // ─── Fetch ────────────────────────────────────────────────────────────────────
-export async function fetchPosts(): Promise<FeedPost[]> {
-  const res = await fetch("/api/posts", {
+export interface FetchPostsParams {
+  lat?: number;
+  lng?: number;
+}
+
+export async function fetchPosts(params?: FetchPostsParams): Promise<FeedPost[]> {
+  const url = new URL("/api/posts", window.location.origin);
+
+  if (params?.lat !== undefined) url.searchParams.set("lat", String(params.lat));
+  if (params?.lng !== undefined) url.searchParams.set("lng", String(params.lng));
+
+  const res = await fetch(url.toString(), {
     // no-store keeps the feed fresh on every re-fetch in dev
     cache: "no-store",
   });
