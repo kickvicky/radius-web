@@ -17,6 +17,15 @@ export type FeedTag = "LOCAL" | "HAPPENING NOW" | "ALERT" | "TRENDING" | "CAUTIO
 
 export type VoteType = "up" | "down" | null;
 
+// ─── Create Post ─────────────────────────────────────────────────────────────
+export interface CreatePostPayload {
+  content: string;
+  imageUrl?: string;
+  tag?: FeedTag;
+  latitude: number;
+  longitude: number;
+}
+
 // ─── API Response Model ───────────────────────────────────────────────────────
 export interface ApiPost {
   id: string;
