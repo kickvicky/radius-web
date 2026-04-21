@@ -1,4 +1,4 @@
-import { ApiPost, FeedPost, FeedTag } from "@/types/feed";
+import { ApiPost, CreatePostPayload, FeedPost, FeedTag } from "@/types/feed";
 
 // ─── Relative time formatter ──────────────────────────────────────────────────
 function formatRelativeTime(isoString: string): string {
@@ -59,4 +59,22 @@ export async function fetchPosts(params?: FetchPostsParams): Promise<FeedPost[]>
 
   const data: ApiPost[] = await res.json();
   return data.map(adaptApiPost);
+}
+
+// ─── Create ───────────────────────────────────────────────────────────────────
+export async function createPost(payload: CreatePostPayload): Promise<ApiPost> {
+  const res = await fetch("/api/post", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(
+      error?.errorMessage ?? `Failed to create post (${res.status})`
+    );
+  }
+
+  return res.json();
 }
