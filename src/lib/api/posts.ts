@@ -48,6 +48,9 @@ export async function fetchPosts(params?: FetchPostsParams): Promise<FeedPost[]>
   const res = await fetch(url.toString(), {
     // no-store keeps the feed fresh on every re-fetch in dev
     cache: "no-store",
+    // Send the RADIUS_SESSION cookie so the Gateway can authenticate.
+    // Required if the fetch ever becomes cross-origin; safe + explicit for same-origin.
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -67,6 +70,9 @@ export async function createPost(payload: CreatePostPayload): Promise<ApiPost> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    // Send the RADIUS_SESSION cookie so the Gateway can authenticate.
+    // Required if the fetch ever becomes cross-origin; safe + explicit for same-origin.
+    credentials: "include",
   });
 
   if (!res.ok) {
