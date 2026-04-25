@@ -1,45 +1,45 @@
 import Link from "next/link";
-import { cookies, headers } from "next/headers";
 import { Radar, ArrowRight } from "lucide-react";
-import {
-  checkSessionValid,
-  GATEWAY_LOGIN_URL,
-  SESSION_COOKIE_NAME,
-} from "@/lib/auth";
+import { getCurrentUser, GATEWAY_LOGIN_URL } from "@/lib/auth";
 
 export default async function Home() {
-  // In Next.js 16, `cookies()` and `headers()` are async and must be awaited.
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
-
-  // ── Decide which CTA to show ───────────────────────────────────────────────
-  // Fast path: no session cookie at all → show the Login CTA, no network call.
-  // Otherwise ask the Gateway to confirm the session is actually valid
-  // (mirrors what src/proxy.ts does so the UI matches reality).
-  let isLoggedIn = false;
-  if (cookieStore.has(SESSION_COOKIE_NAME)) {
-    const cookieHeader = headerStore.get("cookie") ?? "";
-    try {
-      isLoggedIn = await checkSessionValid(cookieHeader);
-    } catch (error) {
-      // Gateway unreachable / 5xx — fall back to cookie-presence so the UI
-      // stays usable. If the session turns out to be stale, the proxy will
-      // catch it on the next navigation and redirect to login.
-      console.warn("[home] Auth status check failed; falling back:", error);
-      isLoggedIn = true;
-    }
-  }
+  // `getCurrentUser()` is wrapped in React.cache, so this is the same
+  // request-scoped fetch used by the layout + Header. When the cookie is
+  // missing we return null without a network call, so the logged-out path
+  // stays free.
+  const user = await getCurrentUser();
+  const isLoggedIn = user !== null;
+  // Use first name only for a friendlier greeting; fall back to the handle
+  // if the Gateway didn't return a display name.
+  const firstName = user?.name?.trim().split(/\s+/)[0] || user?.username || "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center pt-[20vh] px-6">
       <div className="max-w-md w-full space-y-8 text-center">
         <div className="space-y-4">
-          <div className="w-20 h-20 rounded-[16px] bg-primary/10 flex items-center justify-center mx-auto">
-            <Radar className="w-10 h-10 text-primary" />
-          </div>
+          {isLoggedIn ? (
+            // Signed-in: render the user's deterministic DiceBear avatar.
+            // The data URL is pre-resolved and cached on the server inside
+            // `getCurrentUser()`, so this `<img>` paints from inline HTML
+            // with no client-side network call.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user!.avatarDataUrl}
+              alt={`Avatar for @${user!.username}`}
+              width={80}
+              height={80}
+              className="w-20 h-20 rounded-[16px] bg-gradient-to-br from-primary/20 to-primary/5 mx-auto shrink-0"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-[16px] bg-primary/10 flex items-center justify-center mx-auto">
+              <Radar className="w-10 h-10 text-primary" />
+            </div>
+          )}
           <h1 className="text-3xl font-bold tracking-tight">
             {isLoggedIn ? (
               <>
-                Welcome back to <span className="text-primary">Radius</span>
+                Welcome back{firstName ? `, ${firstName}` : ""} to{" "}
+                <span className="text-primary">Radius</span>
               </>
             ) : (
               <>
