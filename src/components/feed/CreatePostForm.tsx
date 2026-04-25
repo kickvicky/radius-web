@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { FEED_POSTS_QUERY_KEY } from "@/hooks/useFeedPosts";
 import { uploadImage } from "@/lib/cloudinary";
 import { createPost } from "@/lib/api/posts";
 import { FeedTag } from "@/types/feed";
+import { useUser } from "@/providers/UserProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SubmitState = "idle" | "uploading" | "posting" | "done";
@@ -103,6 +104,38 @@ function SubmitLabel({ state }: { state: SubmitState }) {
   return <><Send className="w-4 h-4" /> Post to Pulse</>;
 }
 
+// Reads the user from the server-rendered promise via <UserProvider>. Wrapped
+// in its own component so we can Suspend just this chip instead of the whole
+// form while the /api/auth/status fetch resolves.
+function PostingAsBadge() {
+  const user = useUser();
+  if (!user) return null;
+  return (
+    <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={user.avatarDataUrl}
+        alt={`Avatar for @${user.username}`}
+        width={28}
+        height={28}
+        className="w-7 h-7 rounded-[8px] bg-gradient-to-br from-primary/20 to-primary/5 shrink-0"
+      />
+      <span className="truncate">
+        Posting as <span className="font-medium text-on-surface">@{user.username}</span>
+      </span>
+    </div>
+  );
+}
+
+function PostingAsBadgeFallback() {
+  return (
+    <div className="flex items-center gap-2 text-xs text-on-surface-variant/60">
+      <div className="w-7 h-7 rounded-[8px] bg-surface-container-high animate-pulse" />
+      <span>Loading identity…</span>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export function CreatePostForm() {
   const router = useRouter();
@@ -180,6 +213,11 @@ export function CreatePostForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* ── Identity chip ── */}
+      <Suspense fallback={<PostingAsBadgeFallback />}>
+        <PostingAsBadge />
+      </Suspense>
+
       {/* ── Text area ── */}
       <div className="bg-surface-container rounded-[12px] p-4">
         <textarea

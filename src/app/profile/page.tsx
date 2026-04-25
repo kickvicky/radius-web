@@ -1,8 +1,11 @@
 import { Header, BottomNavigation } from "@/components/layout";
-import { Shield, MapPin, MessageCircle, ChevronUp, Settings } from "lucide-react";
+import { MapPin, MessageCircle, ChevronUp, Settings } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
+import { getAvatarDataUrl } from "@/lib/avatar";
 
+// NOTE: these are still placeholders — they should come from a stats endpoint
+// once the backend exposes one. Only identity fields are currently real.
 const userStats = {
-  username: "Phantom-Coder-42",
   joinedAgo: "3 months ago",
   postsCount: 28,
   upvotesReceived: 342,
@@ -10,7 +13,19 @@ const userStats = {
   currentLocation: "Indiranagar, Bengaluru",
 };
 
-export default function Profile() {
+export default async function Profile() {
+  // This route is already gated by the proxy (src/proxy.ts), so `user` will
+  // almost always be non-null here. We still defend against the edge case
+  // where the Gateway hiccups between proxy and render.
+  const user = await getCurrentUser();
+  const displayHandle = user?.username ?? "anonymous";
+  const displayName = user?.name?.trim() || displayHandle;
+  // Use the pre-resolved data URL from `getCurrentUser()` when we have a real
+  // user. The "anonymous" fallback path is rare (Gateway hiccup); resolve its
+  // avatar inline — `getAvatarDataUrl()` reuses the module-level cache so
+  // subsequent visits are free.
+  const avatarSrc = user?.avatarDataUrl ?? (await getAvatarDataUrl(displayHandle));
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -25,12 +40,22 @@ export default function Profile() {
 
         <div className="bg-surface-container rounded-[12px] p-5 mb-4">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-[16px] bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
-              <Shield className="w-8 h-8 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-lg">{userStats.username}</h2>
-              <p className="text-xs text-on-surface-variant">Joined {userStats.joinedAgo}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={avatarSrc}
+              alt={`Avatar for @${displayHandle}`}
+              width={64}
+              height={64}
+              className="w-16 h-16 rounded-[16px] bg-gradient-to-br from-primary/20 to-primary/5 shrink-0"
+            />
+            <div className="min-w-0 space-y-0.5">
+              <h2 className="font-semibold text-lg truncate">{displayName}</h2>
+              <p className="text-xs text-on-surface-variant truncate">
+                @{displayHandle}
+              </p>
+              <p className="text-xs text-on-surface-variant/70">
+                Joined {userStats.joinedAgo}
+              </p>
             </div>
           </div>
 
