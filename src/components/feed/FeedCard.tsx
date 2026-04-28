@@ -56,11 +56,23 @@ export function FeedCard({ post }: FeedCardProps) {
     <article className="bg-surface-container rounded-[12px] p-4 space-y-3">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <span className="text-sm font-bold text-primary">
-              {post.username.charAt(0)}
-            </span>
-          </div>
+          {/*
+            Author avatar — fetched directly from DiceBear by the browser.
+            URL pattern matches `avatarUrlFor()` in src/lib/avatar.ts (kept
+            inline here because that module is server-only). Browsers cache
+            this response per username, so a single user appearing in many
+            cards / pages still results in one fetch.
+          */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(post.username)}`}
+            alt={`Avatar for @${post.username}`}
+            width={40}
+            height={40}
+            loading="lazy"
+            decoding="async"
+            className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-primary/20 to-primary/5 shrink-0"
+          />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">{post.username}</span>
