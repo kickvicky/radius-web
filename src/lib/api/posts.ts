@@ -65,10 +65,33 @@ export async function fetchPosts(params?: FetchPostsParams): Promise<FeedPost[]>
 }
 
 // ─── Create ───────────────────────────────────────────────────────────────────
-export async function createPost(payload: CreatePostPayload): Promise<ApiPost> {
+export interface CreatePostOptions {
+  /**
+   * Stable UUID identifying a single logical submission attempt. Sent as the
+   * `Idempotency-Key` HTTP header so the Gateway can deduplicate retries
+   * (double-clicks, lost responses, mobile-flake retries) without creating
+   * duplicate posts. The caller is responsible for generating the key once
+   * per attempt and reusing it across retries.
+   *
+   * See docs/api/posts.md §2.2 for the contract.
+   */
+  idempotencyKey?: string;
+}
+
+export async function createPost(
+  payload: CreatePostPayload,
+  options: CreatePostOptions = {}
+): Promise<ApiPost> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (options.idempotencyKey) {
+    headers["Idempotency-Key"] = options.idempotencyKey;
+  }
+
   const res = await fetch("/api/post", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
     // Send the RADIUS_SESSION cookie so the Gateway can authenticate.
     // Required if the fetch ever becomes cross-origin; safe + explicit for same-origin.

@@ -181,6 +181,12 @@ export function CreatePostForm() {
     if (!canSubmit) return;
     setError(null);
 
+    // Stable per-submission key. If a network retry fires for this same
+    // submit (lost response, double-click race, etc.) the Gateway will see
+    // the same key and dedupe — no duplicate post. A fresh key is minted
+    // for each new submission attempt.
+    const idempotencyKey = crypto.randomUUID();
+
     try {
       let imageUrl: string | undefined;
 
@@ -190,13 +196,16 @@ export function CreatePostForm() {
       }
 
       setSubmitState("posting");
-      await createPost({
-        content: content.trim(),
-        imageUrl,
-        tag: tag ?? "LOCAL",
-        latitude: lat!,
-        longitude: lng!,
-      });
+      await createPost(
+        {
+          content: content.trim(),
+          imageUrl,
+          tag: tag ?? "LOCAL",
+          latitude: lat!,
+          longitude: lng!,
+        },
+        { idempotencyKey }
+      );
 
       // Bust the feed cache so the pulse page fetches fresh data on arrival
       await queryClient.invalidateQueries({ queryKey: FEED_POSTS_QUERY_KEY });
